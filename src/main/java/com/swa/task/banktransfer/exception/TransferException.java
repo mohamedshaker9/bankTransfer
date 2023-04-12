@@ -10,7 +10,7 @@ import org.springframework.http.HttpStatus;
 @Setter
 @Builder
 
-public class TransferTransactionException extends RuntimeException{
+public class TransferException extends RuntimeException{
     private HttpStatus status;
     private String message;
     private String description;

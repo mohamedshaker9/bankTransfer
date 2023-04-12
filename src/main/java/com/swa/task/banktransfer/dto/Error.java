@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 
-public class ErrorDto {
+public class Error {
     private LocalDateTime timestamp;
     private String message;
     private String details;

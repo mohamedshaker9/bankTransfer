@@ -1,8 +1,8 @@
 package com.swa.task.banktransfer;
 
-import com.swa.task.banktransfer.dto.ErrorDto;
+import com.swa.task.banktransfer.dto.Error;
 import com.swa.task.banktransfer.exception.ResourceNotFoundException;
-import com.swa.task.banktransfer.exception.TransferTransactionException;
+import com.swa.task.banktransfer.exception.TransferException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -19,9 +19,9 @@ import java.util.Map;
 public class AdviceController {
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ErrorDto> handleResourceNotFound(ResourceNotFoundException ex,
-                                                                     WebRequest request) {
-        return new ResponseEntity<>( ErrorDto.builder()
+    public ResponseEntity<Error> handleResourceNotFound(ResourceNotFoundException ex,
+                                                        WebRequest request) {
+        return new ResponseEntity<>( Error.builder()
                 .timestamp(LocalDateTime.now())
                 .message(ex.getMessage())
                 .details(request.getDescription(false))
@@ -41,10 +41,10 @@ public class AdviceController {
         return ResponseEntity.badRequest().body(errors);
     }
 
-    @ExceptionHandler(TransferTransactionException.class)
-    public ResponseEntity<ErrorDto> handleTransferTransaction(TransferTransactionException ex,
-                                                  WebRequest request) {
-        return new ResponseEntity<>(ErrorDto.builder()
+    @ExceptionHandler(TransferException.class)
+    public ResponseEntity<Error> handleTransferTransaction(TransferException ex,
+                                                           WebRequest request) {
+        return new ResponseEntity<>(Error.builder()
                 .timestamp(LocalDateTime.now())
                 .message(ex.getMessage())
                 .build(), ex.getStatus());

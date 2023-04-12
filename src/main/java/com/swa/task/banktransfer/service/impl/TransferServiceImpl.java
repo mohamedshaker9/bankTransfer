@@ -2,7 +2,7 @@ package com.swa.task.banktransfer.service.impl;
 
 import com.swa.task.banktransfer.dto.TransferRequest;
 import com.swa.task.banktransfer.exception.ResourceNotFoundException;
-import com.swa.task.banktransfer.exception.TransferTransactionException;
+import com.swa.task.banktransfer.exception.TransferException;
 import com.swa.task.banktransfer.model.Account;
 import com.swa.task.banktransfer.model.Transaction;
 import com.swa.task.banktransfer.repository.AccountRepository;
@@ -24,39 +24,46 @@ public class TransferServiceImpl implements TransferService {
     private final TransactionRepository transactionRepository;
 
 
-    public String transfer(TransferRequest transferRequest) {
-        Account from = accountRepository.findByAccountNumber(transferRequest.getFromAccount())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Account", "accountNumber", transferRequest.getFromAccount()));
+    public void transfer(TransferRequest transferRequest) {
+        Account from = findByAccountNumber(transferRequest.getFromAccount());
+        Account to = findByAccountNumber(transferRequest.getToAccount());
 
-        Account to = accountRepository.findByAccountNumber(transferRequest.getToAccount())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Account", "accountNumber", transferRequest.getToAccount()));
+        checkIfAccountBalanceSufficient(from.getBalance(), transferRequest.getAmount());
 
-        validateAccountBalanceSufficiency(from.getBalance(), transferRequest.getAmount());
+        updateAccounts(transferRequest.getFromAccount(), transferRequest.getToAccount(), transferRequest.getAmount());
 
-        accountRepository.decreaseBalance(transferRequest.getAmount(), transferRequest.getFromAccount());
-        accountRepository.increaseBalance(transferRequest.getAmount(), transferRequest.getToAccount());
-
-        transactionRepository.save(
-                Transaction.builder()
-                        .amount(transferRequest.getAmount())
-                        .from(from)
-                        .to(to)
-                        .build());
-
-        return "Success Transfer";
+        saveTransaction(from, to, transferRequest.getAmount());
     }
 
-    private void validateAccountBalanceSufficiency(BigDecimal balance, BigDecimal transferAmount)
-            throws TransferTransactionException {
+    private Account findByAccountNumber(String accountNumber) {
+        return accountRepository.findByAccountNumber(accountNumber)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Account", "accountNumber", accountNumber));
+    }
+
+    private void checkIfAccountBalanceSufficient(BigDecimal balance, BigDecimal transferAmount)
+            throws TransferException {
         if (balance.compareTo(transferAmount) < 0) {
-            throw TransferTransactionException.builder()
+            throw TransferException.builder()
                     .status(HttpStatus.BAD_REQUEST)
                     .message("Insufficient Balance")
                     .description("Sending Account has no sufficient Balance")
                     .build();
         }
+    }
+
+    private void updateAccounts(String from, String to, BigDecimal amount){
+        accountRepository.decreaseBalance(amount, from);
+        accountRepository.increaseBalance(amount, to);
+    }
+
+    private void saveTransaction(Account from, Account to, BigDecimal amount) {
+        transactionRepository.save(
+                Transaction.builder()
+                        .amount(amount)
+                        .from(from)
+                        .to(to)
+                        .build());
     }
 
 }

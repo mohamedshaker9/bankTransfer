@@ -6,5 +6,5 @@ import org.springframework.transaction.annotation.Transactional;
 public interface TransferService {
 
     @Transactional
-    String transfer(TransferRequest transferRequest);
+    void transfer(TransferRequest transferRequest);
 }
